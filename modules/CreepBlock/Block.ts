@@ -1,5 +1,6 @@
 import { ArrayExtensions, Creep, EntityManager, ExecuteOrder, GameSleeper, GameState, LocalPlayer, Menu, RendererSDK, Tower, Unit, VKeys, VMouseKeys } from "wrapper/Imports"
 import { stateMain } from "../../base/MenuBase"
+import { EntityManagerX } from "../../immortal-core/Imports"
 
 import {
 	baseCheckUnit,
@@ -304,6 +305,9 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 
 	creeps = ArrayExtensions.orderBy(creeps, creep => creep.Distance2D(moveDirection))
 
+	const unitX = EntityManagerX.GetUnit(unit)
+	if (unitX === undefined)
+		return
 	const stopping = creeps.some(creep => {
 
 		if (!creep.IsMoving && !creep.IsInRange(unit, 50))
@@ -316,8 +320,11 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 		if (creepDistance < unitDistance && creepAngle > 2 || creepAngle > 2.5)
 			return false
 
-		const npcSpeed = unit.IdealSpeed,
-			creepSpeed = creep.IdealSpeed
+		const creepX = EntityManagerX.GetUnit(creep)
+		if (creepX === undefined)
+			return false
+		const npcSpeed = unitX.Speed,
+			creepSpeed = creepX.Speed
 		let moveDistance = ((Sensitivity.value + 45) * 10) / npcSpeed * 100
 
 		if ((npcSpeed - creepSpeed) > 50)

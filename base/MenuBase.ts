@@ -1,4 +1,4 @@
-import { Menu as MenuSDK } from "wrapper/Imports"
+import { Menu as MenuSDK } from "github.com/octarine-public/wrapper/wrapper/Imports"
 
 export const Menu = MenuSDK.AddEntryDeep(["Utility", "Unit Blocker"], ["panorama/images/hud/reborn/icon_speed_psd.vtex_c"])
 export const stateMain = Menu.AddToggle("State")

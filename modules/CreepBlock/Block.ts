@@ -1,5 +1,5 @@
-import { EntityManagerX } from "github.com/octarine-private/immortal-core/Imports"
-import { ArrayExtensions, Creep, EntityManager, ExecuteOrder, GameSleeper, GameState, LocalPlayer, Menu, RendererSDK, Tower, Unit, VKeys, VMouseKeys } from "github.com/octarine-public/wrapper/wrapper/Imports"
+import { EntityManagerX } from "github.com/octarine-private/immortal-core/index"
+import { ArrayExtensions, Creep, EntityManager, ExecuteOrder, GameSleeper, GameState, LocalPlayer, Menu, RendererSDK, Tower, Unit, VKeys, VMouseKeys } from "github.com/octarine-public/wrapper/index"
 import { stateMain } from "../../base/MenuBase"
 
 import {

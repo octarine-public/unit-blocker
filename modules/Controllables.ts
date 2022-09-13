@@ -1,4 +1,4 @@
-import { DOTAUnitMoveCapability_t, Entity, EntityManager, ExecuteOrder, Menu as MenuSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/wrapper/Imports"
+import { DOTAUnitMoveCapability_t, Entity, EntityManager, ExecuteOrder, Menu as MenuSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/index"
 
 export let baseCheckUnit = (ent: Unit) =>
 	ent.IsAlive

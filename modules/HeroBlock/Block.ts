@@ -1,4 +1,4 @@
-import { ArrayExtensions, EntityManager, ExecuteOrder, GameSleeper, GameState, Hero, Input, LocalPlayer, RendererSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/wrapper/Imports"
+import { ArrayExtensions, EntityManager, ExecuteOrder, GameSleeper, GameState, Hero, Input, LocalPlayer, RendererSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/index"
 
 import {
 	baseCheckUnit,

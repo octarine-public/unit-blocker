@@ -1,4 +1,4 @@
-import { DOTAGameUIState_t, EventsSDK, GameRules, GameState, InputEventSDK, LocalPlayer, RendererSDK } from "github.com/octarine-public/wrapper/wrapper/Imports"
+import { DOTAGameUIState_t, EventsSDK, GameRules, GameState, InputEventSDK, LocalPlayer, RendererSDK } from "github.com/octarine-public/wrapper/index"
 import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHelp"
 
 import * as DrawParticle from "./base/DrawParticle"

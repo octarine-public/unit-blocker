@@ -14,6 +14,7 @@
 	"Go to the best position": "Встать на лучшую позицию",
 	"Centering camera on your hero": "Центрировать камеру на герое",
 	"Hold key": "Удерживать",
+	"- Controllables": "- Подконтрольные",
 	"Turn on / Turn off": "Включить/выключить",
 	"Biggest value to smaller blocks but more accurately.\nDefault for many heroes - 16": "Наибольшее значение для меньших блоков, но более точное.\nПо умолчанию для многих героев - 16",
 	"Drawing help particle where the best position for block creeps.\nAuto removed in 5 min after creating": "Частица помощи в рисовании, где лучшая позиция для крип блока.\nАвтоматически удаляется через 5 минут после создания",

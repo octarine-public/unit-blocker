@@ -31,7 +31,7 @@ export default function Menu(root: MenuSDK.Node) {
 		// "Selected Unit(s)",
 		"Only controllables",
 		"All Controllables",
-	], 0, "More than two units(or heroes) for one line of creeps is not recommended")
+	], 0, "More than two units(or heroes) for\none line of creeps is not recommended")
 
 	const CenterCamera = ControllablesTree.AddToggle("Center Camera", false, "Centering camera on your hero")
 	const CountUnits = ControllablesTree.AddSlider("Number of unit", 3, 1, 10, 0, "Number of units to use")

@@ -1,11 +1,10 @@
 import { DOTAGameUIState_t, EventsSDK, GameRules, GameState, InputEventSDK, LocalPlayer, RendererSDK } from "github.com/octarine-public/wrapper/index"
-import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHelp"
-
 import * as DrawParticle from "./base/DrawParticle"
 import { stateMain } from "./base/MenuBase"
-
 import * as CreepBlock from "./modules/CreepBlock/Block"
-import * as HeroBlock from "./modules/HeroBlock/Block"
+import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHelp"
+import "./Translate"
+// import * as HeroBlock from "./modules/HeroBlock/Block"
 
 const IsValid = () => {
 	return stateMain.value
@@ -16,7 +15,7 @@ const IsValid = () => {
 EventsSDK.on("GameEnded", () => {
 	DrawParticle.GameEnded()
 	CreepBlock.GameEnded()
-	HeroBlock.GameEnded()
+	// HeroBlock.GameEnded()
 	RemoveParticles()
 })
 
@@ -32,7 +31,7 @@ EventsSDK.on("Tick", () => {
 		return
 
 	CreepBlock.Update()
-	HeroBlock.Update()
+	// HeroBlock.Update()
 })
 
 EventsSDK.on("Draw", () => {
@@ -43,7 +42,7 @@ EventsSDK.on("Draw", () => {
 
 	textAroundMouse += CreepBlock.Draw() ?? ""
 
-	textAroundMouse += HeroBlock.Draw() ?? ""
+	// textAroundMouse += HeroBlock.Draw() ?? ""
 
 	if (textAroundMouse === "")
 		return

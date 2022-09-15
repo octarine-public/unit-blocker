@@ -20,8 +20,6 @@ import {
 	KeyStyle,
 	Sensitivity,
 	SkipRange,
-
-	State,
 	StateUnits,
 	StatusAroundUnits,
 	StatusMouse,
@@ -35,7 +33,6 @@ const SwitchParticles = (caller: Menu.Toggle) => caller.value ? DrawParticles() 
 let turnStateBlock = false
 const ControllablesUnitsDraw = new Map<Unit, string>()
 
-State.OnValue(SwitchParticles)
 DrawState.OnValue(SwitchParticles)
 DrawHelpPosition.OnValue(SwitchParticles)
 stateMain.OnValue(SwitchParticles)
@@ -101,7 +98,7 @@ export function MouseUp(key: VMouseKeys) {
 
 let last_enabled = false
 export function Update() {
-	const enabled = State.value && !(
+	const enabled = !(
 		(KeyStyle.selected_id === 1 && !turnStateBlock) ||
 		(KeyStyle.selected_id === 0 && !Key.is_pressed)
 	)
@@ -168,7 +165,7 @@ export function Update() {
 }
 
 export function Draw(): string | undefined {
-	if (!State.value || !DrawState.value)
+	if (!stateMain.value || !DrawState.value)
 		return
 
 	if ((KeyStyle.selected_id === 1 && !turnStateBlock) ||

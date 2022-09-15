@@ -1,6 +1,7 @@
 {
-	"name": "unit-blocker",
 	"version": "1.0.0",
+	"main": "bootstrap.ts",
+	"name": "unit-blocker",
 	"description": "Unit Blocker",
 	"author": "LalkaKaro4",
 	"devDependencies": {

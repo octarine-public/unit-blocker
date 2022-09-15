@@ -1,0 +1,22 @@
+{
+	"Key": "Клавиша",
+	"Draw": "Отрисовка",
+	"Key Style": "Режим бинда",
+	"Creep Block": "Блок крипов",
+	"Local Hero": "Локальный герой",
+	"Number of unit": "Число юнитов",
+	"Best position": "Лучшая позиция",
+	"Number of units to use": "Число юнитов для использования",
+	"All Controllables": "Все подконтрольные",
+	"Only controllables": "Только подконтрольные",
+	"Center Camera": "Центрирование камеры",
+	"Skip range-creeps": "Пропускать дальнего крипа",
+	"Go to the best position": "Встать на лучшую позицию",
+	"Centering camera on your hero": "Центрировать камеру на герое",
+	"Hold key": "Удерживать",
+	"Turn on / Turn off": "Включить/выключить",
+	"Biggest value to smaller blocks but more accurately.\nDefault for many heroes - 16": "Наибольшее значение для меньших блоков, но более точное.\nПо умолчанию для многих героев - 16",
+	"Drawing help particle where the best position for block creeps.\nAuto removed in 5 min after creating": "Частица помощи в рисовании, где лучшая позиция для крип блока.\nАвтоматически удаляется через 5 минут после создания",
+	"Going to the best position when\nwaiting creeps (Visual: Help position)": "Переход в лучшую позицию\nпри ожидании крипов (визуально: позиция помощи)",
+	"More than two units(or heroes) for\none line of creeps is not recommended": "Более двух юнитов(или героев) на одну линию\nкрипов не рекомендуется"
+}

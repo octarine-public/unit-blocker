@@ -2,7 +2,7 @@ import { GameRules, GameState, Hero, LocalPlayer, Vector3 } from "github.com/oct
 
 import { AddOrUpdateParticle, RemoveParticle } from "../../base/DrawParticle"
 import { stateMain } from "../../base/MenuBase"
-import { DrawHelpPosition, DrawState, State } from "./Menu"
+import { DrawHelpPosition, DrawState } from "./Menu"
 
 let lastHero: Nullable<Hero>
 let particles: string[] = []
@@ -24,7 +24,6 @@ export function DrawParticles() {
 	if (GameRules === undefined
 		|| GameState.MapName.startsWith("hero_demo")
 		|| !stateMain.value
-		|| !State.value
 		|| !DrawState.value
 		|| !DrawHelpPosition.value
 		|| !GameRules.IsInGame

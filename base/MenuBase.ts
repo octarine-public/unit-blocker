@@ -4,11 +4,10 @@ export const Menu = MenuSDK.AddEntryDeep(["Utility", "Unit Blocker"], ["panorama
 export const stateMain = Menu.AddToggle("State")
 
 export function MenuBase(root: MenuSDK.Node, name: string, enabled = false, defaultKey = "") {
-	const BaseTree = root.AddNode(name)
+	const BaseTree = root //root.AddNode(name)
 
 	return {
 		BaseTree,
-		State: BaseTree.AddToggle("State", enabled),
 		Key: BaseTree.AddKeybind("Key", defaultKey),
 		KeyStyle: BaseTree.AddDropdown("Key Style", ["Hold key", "Turn on / Turn off"]),
 		Sensitivity: BaseTree.AddSlider(
@@ -17,7 +16,7 @@ export function MenuBase(root: MenuSDK.Node, name: string, enabled = false, defa
 			0,
 			35,
 			0,
-			"Biggest value to smaller blocks but more accurately. Default for many heroes - 16",
+			"Biggest value to smaller blocks but more accurately.\nDefault for many heroes - 16",
 		),
 	}
 }

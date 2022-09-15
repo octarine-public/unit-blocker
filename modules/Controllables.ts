@@ -24,7 +24,7 @@ export let StopUnit = (unit: Unit) => {
 
 export default function Menu(root: MenuSDK.Node) {
 
-	const ControllablesTree = root.AddNode(root.InternalName + " " + MenuSDK.Localization.Localize("- Controllables"))
+	const ControllablesTree = root.AddNode("Additional settings")
 
 	const StateUnits = ControllablesTree.AddDropdown("Units", [
 		"Local Hero",

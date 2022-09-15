@@ -26,7 +26,7 @@ export function MenuDraw(root: MenuSDK.Node) {
 
 	return {
 		DrawTree,
-		DrawState: DrawTree.AddToggle("State Draw", true),
+		DrawState: DrawTree.AddToggle("State", true),
 		StatusAroundUnits: DrawTree.AddToggle("Status around units(or Heroes)", true),
 		StatusMouse: DrawTree.AddToggle("Status around mouse"),
 	}

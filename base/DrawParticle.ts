@@ -1,4 +1,9 @@
-import { ParticleAttachment_t, ParticlesSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/index"
+import {
+	ParticleAttachment,
+	ParticlesSDK,
+	Unit,
+	Vector3
+} from "github.com/octarine-public/wrapper/index"
 
 const particleManager = new ParticlesSDK()
 
@@ -10,9 +15,9 @@ export function AddOrUpdateParticle(name: string, unit: Unit, pos: Vector3) {
 	particleManager.AddOrUpdate(
 		name + unit.Index,
 		"particles/newplayer_fx/npx_moveto_goal.vpcf",
-		ParticleAttachment_t.PATTACH_ABSORIGIN,
+		ParticleAttachment.PATTACH_ABSORIGIN,
 		unit,
-		[0, pos],
+		[0, pos]
 	)
 }
 

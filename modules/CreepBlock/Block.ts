@@ -294,12 +294,8 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 
 		const creepX = EntityManagerX.GetUnit(creep)
 		if (creepX === undefined) return false
-
 		const npcSpeed = unitX.Speed,
 			creepSpeed = creepX.Speed
-
-		console.log("creepSpeed", creepSpeed, "npcSpeed", npcSpeed)
-
 		let moveDistance = (((Sensitivity.value + 45) * 10) / npcSpeed) * 100
 
 		if (npcSpeed - creepSpeed > 50) moveDistance -= (npcSpeed - creepSpeed) / 2

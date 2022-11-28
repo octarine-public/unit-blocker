@@ -107,6 +107,7 @@ export function Update() {
 		ExecuteOrder.HoldOrders--
 		ExecuteOrder.HoldOrdersTarget = undefined
 	} else if (enabled && !lastEnabled) ExecuteOrder.HoldOrders++
+
 	lastEnabled = enabled
 
 	if (!enabled || sleeper.Sleeping("tick")) return

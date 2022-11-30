@@ -215,7 +215,7 @@ function CheckTowerNear(unit: Unit): boolean {
 		tower =>
 			tower.IsAlive &&
 			((tower.Name === "npc_dota_goodguys_tower1_mid" && tower.IsInRange(unit, 100)) ||
-				(tower.Name === "npc_dota_goodguys_tower2_mid" && tower.IsInRange(unit, 100)))
+				(tower.Name === "npc_dota_goodguys_tower2_mid" && tower.IsInRange(unit, 150)))
 	)
 }
 

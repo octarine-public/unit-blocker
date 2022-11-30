@@ -231,7 +231,10 @@ function GoingToBestPosition(unit: Unit): boolean {
 }
 
 export function PrepareUnitOrders(): boolean {
-	return !turnStateBlock
+	return (
+		(KeyStyle.SelectedID === 1 && !turnStateBlock) ||
+		(KeyStyle.SelectedID === 0 && !Key.isPressed)
+	)
 }
 
 function PreparingUnits(controllables: Unit[]) {

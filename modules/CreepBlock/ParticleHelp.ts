@@ -1,10 +1,4 @@
-import {
-	GameRules,
-	GameState,
-	Hero,
-	LocalPlayer,
-	Vector3
-} from "github.com/octarine-public/wrapper/index"
+import { GameRules, GameState, Hero, LocalPlayer, Vector3 } from "github.com/octarine-public/wrapper/index"
 
 import { AddOrUpdateParticle, RemoveParticle } from "../../base/DrawParticle"
 import { stateMain } from "../../base/MenuBase"
@@ -35,27 +29,36 @@ export function DrawParticles() {
 		!DrawHelpPosition.value ||
 		!GameRules.IsInGame ||
 		GameState.RawGameTime <= 5
-	)
+	) {
 		return
+	}
 
 	lastHero = LocalPlayer?.Hero
 
-	if (lastHero === undefined || LocalPlayer === undefined) return
+	if (lastHero === undefined || LocalPlayer === undefined) {
+		return
+	}
 
 	const teamParticles = BestPosition[LocalPlayer.Team - 2]
 
-	if (teamParticles === undefined) return
+	if (teamParticles === undefined) {
+		return
+	}
 
 	teamParticles.forEach(vec => {
 		const name = vec.x.toString()
-		if (particles.includes(name)) return
+		if (particles.includes(name)) {
+			return
+		}
 		AddOrUpdateParticle(name, lastHero!, vec)
 		particles.push(name)
 	})
 }
 
 export function RemoveParticles() {
-	if (lastHero === undefined) return
+	if (lastHero === undefined) {
+		return
+	}
 	particles.forEach(partcl => RemoveParticle(partcl, lastHero!))
 	particles = []
 }

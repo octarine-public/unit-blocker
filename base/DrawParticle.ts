@@ -1,9 +1,4 @@
-import {
-	ParticleAttachment,
-	ParticlesSDK,
-	Unit,
-	Vector3
-} from "github.com/octarine-public/wrapper/index"
+import { ParticleAttachment, ParticlesSDK, Unit, Vector3 } from "github.com/octarine-public/wrapper/index"
 
 const particleManager = new ParticlesSDK()
 

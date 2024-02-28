@@ -47,7 +47,11 @@ EventsSDK.on("Tick", () => {
 })
 
 EventsSDK.on("Draw", () => {
-	if (!stateMain.value || !GameRules?.IsInGame || GameState.UIState !== DOTAGameUIState.DOTA_GAME_UI_DOTA_INGAME) {
+	if (
+		!stateMain.value ||
+		!GameRules?.IsInGame ||
+		GameState.UIState !== DOTAGameUIState.DOTA_GAME_UI_DOTA_INGAME
+	) {
 		return
 	}
 

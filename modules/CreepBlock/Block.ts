@@ -1,4 +1,3 @@
-import { EntityManagerX } from "github.com/octarine-private/immortal-core/index"
 import {
 	ArrayExtensions,
 	Creep,
@@ -16,7 +15,12 @@ import {
 } from "github.com/octarine-public/wrapper/index"
 
 import { stateMain } from "../../base/MenuBase"
-import { baseCheckUnit, Controllables, getCenterDirection, MoveUnit } from "../Controllables"
+import {
+	baseCheckUnit,
+	Controllables,
+	getCenterDirection,
+	MoveUnit
+} from "../Controllables"
 import {
 	CenterCamera,
 	CountUnits,
@@ -35,7 +39,8 @@ import { BestPosition, DrawParticles, RemoveParticles } from "./ParticleHelp"
 
 const sleeper = new GameSleeper()
 
-const SwitchParticles = (caller: Menu.Toggle) => (caller.value ? DrawParticles() : RemoveParticles())
+const SwitchParticles = (caller: Menu.Toggle) =>
+	caller.value ? DrawParticles() : RemoveParticles()
 let turnStateBlock = false
 const ControllablesUnitsDraw = new Map<Unit, string>()
 
@@ -53,7 +58,9 @@ Key.OnPressed(() => {
 	}
 
 	if (KeyStyle.SelectedID === 1) {
-		GameState.ExecuteCommand((turnStateBlock ? "+" : "-") + "dota_camera_center_on_hero")
+		GameState.ExecuteCommand(
+			(turnStateBlock ? "+" : "-") + "dota_camera_center_on_hero"
+		)
 	}
 })
 
@@ -109,7 +116,10 @@ export function MouseUp(key: VMouseKeys) {
 
 let lastEnabled = false
 export function Update() {
-	const enabled = !((KeyStyle.SelectedID === 1 && !turnStateBlock) || (KeyStyle.SelectedID === 0 && !Key.isPressed))
+	const enabled = !(
+		(KeyStyle.SelectedID === 1 && !turnStateBlock) ||
+		(KeyStyle.SelectedID === 0 && !Key.isPressed)
+	)
 	if (!enabled && lastEnabled) {
 		ExecuteOrder.HoldOrders--
 		ExecuteOrder.HoldOrdersTarget = undefined
@@ -186,7 +196,10 @@ export function Draw(): string | undefined {
 		return
 	}
 
-	if ((KeyStyle.SelectedID === 1 && !turnStateBlock) || (KeyStyle.SelectedID === 0 && !Key.isPressed)) {
+	if (
+		(KeyStyle.SelectedID === 1 && !turnStateBlock) ||
+		(KeyStyle.SelectedID === 0 && !Key.isPressed)
+	) {
 		return
 	}
 
@@ -228,7 +241,8 @@ function GetGroupsCreeps() {
 	creeps.forEach(creep => {
 		const group = creeps.filter(
 			creepNear =>
-				creep.IsInRange(creepNear, 500) && !groups.some(group_ => group_.some(creep_ => creep_ === creep))
+				creep.IsInRange(creepNear, 500) &&
+				!groups.some(group_ => group_.some(creep_ => creep_ === creep))
 		)
 
 		if (group.length > 0) {
@@ -243,8 +257,10 @@ function CheckTowerNear(unit: Unit): boolean {
 	return EntityManager.GetEntitiesByClass(Tower).some(
 		tower =>
 			tower.IsAlive &&
-			((tower.Name === "npc_dota_goodguys_tower1_mid" && tower.IsInRange(unit, 100)) ||
-				(tower.Name === "npc_dota_goodguys_tower2_mid" && tower.IsInRange(unit, 150)))
+			((tower.Name === "npc_dota_goodguys_tower1_mid" &&
+				tower.IsInRange(unit, 100)) ||
+				(tower.Name === "npc_dota_goodguys_tower2_mid" &&
+					tower.IsInRange(unit, 150)))
 	)
 }
 
@@ -262,7 +278,10 @@ function GoingToBestPosition(unit: Unit): boolean {
 }
 
 export function PrepareUnitOrders(): boolean {
-	return (KeyStyle.SelectedID === 1 && !turnStateBlock) || (KeyStyle.SelectedID === 0 && !Key.isPressed)
+	return (
+		(KeyStyle.SelectedID === 1 && !turnStateBlock) ||
+		(KeyStyle.SelectedID === 0 && !Key.isPressed)
+	)
 }
 
 function PreparingUnits(controllables: Unit[]) {
@@ -282,7 +301,9 @@ function PreparingUnits(controllables: Unit[]) {
 		}
 
 		if (GoToBestPosition.value) {
-			const [group, moveDirection] = unit.ClosestGroup(groups, group_ => getCenterDirection(group_))
+			const [group, moveDirection] = unit.ClosestGroup(groups, group_ =>
+				getCenterDirection(group_)
+			)
 
 			if (!unit.IsInRange(moveDirection, 500)) {
 				if (!GoingToBestPosition(unit)) {
@@ -308,21 +329,18 @@ function PreparingUnits(controllables: Unit[]) {
 	return controllables.length
 }
 
-function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirection(creeps)) {
+function Stopping(
+	unit: Unit,
+	creeps: Creep[],
+	moveDirection = getCenterDirection(creeps)
+) {
 	if (CheckTowerNear(unit)) {
 		ControllablesUnitsDraw.set(unit, "Less stopping (Tower near)")
 		MoveUnit(unit, moveDirection)
 		return
 	}
-
 	ControllablesUnitsDraw.set(unit, "Stopping ")
-
-	creeps = ArrayExtensions.orderBy(creeps, creep => creep.Distance2D(moveDirection))
-
-	const unitX = EntityManagerX.GetUnit(unit)
-	if (unitX === undefined) {
-		return
-	}
+	creeps = creeps.orderBy(creep => creep.Distance2D(moveDirection))
 	const stopping = creeps.some(creep => {
 		if (!creep.IsMoving && !creep.IsInRange(unit, 50)) {
 			return false
@@ -335,13 +353,8 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 		if ((creepDistance < unitDistance && creepAngle > 2) || creepAngle > 2.5) {
 			return false
 		}
-
-		const creepX = EntityManagerX.GetUnit(creep)
-		if (creepX === undefined) {
-			return false
-		}
-		const npcSpeed = unitX.Speed,
-			creepSpeed = creepX.Speed
+		const npcSpeed = unit.Speed,
+			creepSpeed = creep.Speed
 		let moveDistance = (((Sensitivity.value + 45) * 10) / npcSpeed) * 100
 
 		if (npcSpeed - creepSpeed > 50) {
@@ -349,7 +362,6 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 		}
 
 		const movePosition = creep.InFront(moveDistance * Math.max(1, creepAngle))
-
 		if (movePosition.Distance2D(moveDirection) - 50 > unitDistance) {
 			return false
 		}
@@ -359,7 +371,6 @@ function Stopping(unit: Unit, creeps: Creep[], moveDirection = getCenterDirectio
 		}
 
 		MoveUnit(unit, movePosition)
-
 		return true
 	})
 

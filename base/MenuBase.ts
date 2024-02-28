@@ -6,7 +6,12 @@ export const Menu = MenuSDK.AddEntryDeep(
 )
 export const stateMain = Menu.AddToggle("State")
 
-export function MenuBase(root: MenuSDK.Node, _name: string, _enabled = false, defaultKey = "") {
+export function MenuBase(
+	root: MenuSDK.Node,
+	_name: string,
+	_enabled = false,
+	defaultKey = ""
+) {
 	const BaseTree = root //root.AddNode(name)
 
 	return {

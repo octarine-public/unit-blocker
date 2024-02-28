@@ -1,4 +1,10 @@
-import { GameRules, GameState, Hero, LocalPlayer, Vector3 } from "github.com/octarine-public/wrapper/index"
+import {
+	GameRules,
+	GameState,
+	Hero,
+	LocalPlayer,
+	Vector3
+} from "github.com/octarine-public/wrapper/index"
 
 import { AddOrUpdateParticle, RemoveParticle } from "../../base/DrawParticle"
 import { stateMain } from "../../base/MenuBase"

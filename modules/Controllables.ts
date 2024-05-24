@@ -3,6 +3,7 @@ import {
 	Entity,
 	EntityManager,
 	ExecuteOrder,
+	MathSDK,
 	Menu as MenuSDK,
 	Unit,
 	Vector3
@@ -21,7 +22,9 @@ export const Controllables = () =>
 	)
 
 export const getCenterDirection = (units: Entity[]) =>
-	Vector3.GetCenterType(units, unit => unit.InFront(350))
+	Vector3.GetCenterType(units, unit => unit.Position.Rotation(
+		Vector3.FromAngle(unit.RotationRad + MathSDK.DegreesToRadian(unit.RotationDifference)),
+		350))
 
 export function MoveUnit(unit: Unit, pos: Vector3): void {
 	unit.MoveTo(pos)

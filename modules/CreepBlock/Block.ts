@@ -6,10 +6,12 @@ import {
 	GameSleeper,
 	GameState,
 	LocalPlayer,
+	MathSDK,
 	Menu,
 	RendererSDK,
 	Tower,
 	Unit,
+	Vector3,
 	VKeys,
 	VMouseKeys
 } from "github.com/octarine-public/wrapper/index"
@@ -348,7 +350,8 @@ function Stopping(
 
 		const creepDistance = creep.Distance2D(moveDirection) + 50,
 			unitDistance = unit.Distance2D(moveDirection),
-			creepAngle = creep.FindRotationAngle(unit)
+			creepAngle = creep.Position.FindRotationAngle(
+				unit.Position, creep.RotationRad + MathSDK.DegreesToRadian(creep.RotationDifference))
 
 		if ((creepDistance < unitDistance && creepAngle > 2) || creepAngle > 2.5) {
 			return false
@@ -361,7 +364,9 @@ function Stopping(
 			moveDistance -= (npcSpeed - creepSpeed) / 2
 		}
 
-		const movePosition = creep.InFront(moveDistance * Math.max(1, creepAngle))
+		const movePosition = creep.Position.Rotation(
+			Vector3.FromAngle(creep.RotationRad + MathSDK.DegreesToRadian(creep.RotationDifference)),
+			moveDistance * Math.max(1, creepAngle))
 		if (movePosition.Distance2D(moveDirection) - 50 > unitDistance) {
 			return false
 		}
@@ -380,7 +385,8 @@ function Stopping(
 
 	if (unit.IsMoving) {
 		unit.OrderStop()
-	} else if (unit.FindRotationAngle(moveDirection) > 1.5) {
+	} else if (unit.Position.FindRotationAngle(
+			moveDirection, unit.RotationRad + MathSDK.DegreesToRadian(unit.RotationDifference)) > 1.5) {
 		MoveUnit(unit, unit.Position.Extend(moveDirection, 10))
 	}
 }

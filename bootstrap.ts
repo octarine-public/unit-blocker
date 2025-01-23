@@ -27,8 +27,8 @@ EventsSDK.on("GameEnded", () => {
 	RemoveParticles()
 })
 
-EventsSDK.on("Tick", () => {
-	if (!IsValid()) {
+EventsSDK.on("PostDataUpdate", delta => {
+	if (!IsValid() || delta === 0) {
 		return
 	}
 

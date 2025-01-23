@@ -1,12 +1,10 @@
 import {
-	ArrayExtensions,
 	Creep,
 	EntityManager,
 	ExecuteOrder,
 	GameSleeper,
 	GameState,
 	LocalPlayer,
-	MathSDK,
 	Menu,
 	RendererSDK,
 	Tower,
@@ -176,7 +174,7 @@ export function Update() {
 			const localHero = LocalPlayer?.Hero
 
 			if (localHero !== undefined && baseCheckUnit(localHero)) {
-				ArrayExtensions.arrayRemove(controllables, localHero)
+				controllables.remove(localHero)
 			}
 
 			countUnits += PreparingUnits(controllables) || 0
@@ -189,8 +187,8 @@ export function Update() {
 		default:
 			break
 	}
-
-	sleeper.Sleep(countUnits * 25, "tick")
+	const lag = GameState.InputLag * 1000
+	sleeper.Sleep(countUnits * 25 + lag, "tick")
 }
 
 export function Draw(): string | undefined {
@@ -237,21 +235,17 @@ function GetCreeps(unit?: Unit): Creep[] {
 
 function GetGroupsCreeps() {
 	const groups: Creep[][] = []
-
 	const creeps = GetCreeps()
-
 	creeps.forEach(creep => {
 		const group = creeps.filter(
 			creepNear =>
 				creep.IsInRange(creepNear, 500) &&
 				!groups.some(group_ => group_.some(creep_ => creep_ === creep))
 		)
-
 		if (group.length > 0) {
 			groups.push(group)
 		}
 	})
-
 	return groups
 }
 
@@ -268,14 +262,14 @@ function CheckTowerNear(unit: Unit): boolean {
 
 function GoingToBestPosition(unit: Unit): boolean {
 	const closest = unit.Position.Closest(BestPosition[unit.Team - 2])
-
 	if (unit.IsInRange(closest, 50)) {
 		return false
 	}
-
-	MoveUnit(unit, closest)
+	if (!sleeper.Sleeping("ToBestPosition")) {
+		MoveUnit(unit, closest)
+	}
 	ControllablesUnitsDraw.set(unit, "Moving to the best position")
-
+	sleeper.Sleep(GameState.InputLag * 1000, "ToBestPosition")
 	return true
 }
 
@@ -351,13 +345,15 @@ function Stopping(
 		const creepDistance = creep.Distance2D(moveDirection) + 50,
 			unitDistance = unit.Distance2D(moveDirection),
 			creepAngle = creep.Position.FindRotationAngle(
-				unit.Position, creep.RotationRad + MathSDK.DegreesToRadian(creep.RotationDifference))
+				unit.Position,
+				creep.RotationRad + Math.degreesToRadian(creep.RotationDifference)
+			)
 
 		if ((creepDistance < unitDistance && creepAngle > 2) || creepAngle > 2.5) {
 			return false
 		}
-		const npcSpeed = unit.Speed,
-			creepSpeed = creep.Speed
+		const npcSpeed = unit.MoveSpeed,
+			creepSpeed = creep.MoveSpeed
 		let moveDistance = (((Sensitivity.value + 45) * 10) / npcSpeed) * 100
 
 		if (npcSpeed - creepSpeed > 50) {
@@ -365,8 +361,11 @@ function Stopping(
 		}
 
 		const movePosition = creep.Position.Rotation(
-			Vector3.FromAngle(creep.RotationRad + MathSDK.DegreesToRadian(creep.RotationDifference)),
-			moveDistance * Math.max(1, creepAngle))
+			Vector3.FromAngle(
+				creep.RotationRad + Math.degreesToRadian(creep.RotationDifference)
+			),
+			moveDistance * Math.max(1, creepAngle)
+		)
 		if (movePosition.Distance2D(moveDirection) - 50 > unitDistance) {
 			return false
 		}
@@ -385,8 +384,12 @@ function Stopping(
 
 	if (unit.IsMoving) {
 		unit.OrderStop()
-	} else if (unit.Position.FindRotationAngle(
-			moveDirection, unit.RotationRad + MathSDK.DegreesToRadian(unit.RotationDifference)) > 1.5) {
+	} else if (
+		unit.Position.FindRotationAngle(
+			moveDirection,
+			unit.RotationRad + Math.degreesToRadian(unit.RotationDifference)
+		) > 1.5
+	) {
 		MoveUnit(unit, unit.Position.Extend(moveDirection, 10))
 	}
 }

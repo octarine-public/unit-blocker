@@ -34,15 +34,16 @@ export const getCenterDirection = (units: Entity[]) =>
 
 export function MoveUnit(unit: Unit, pos: Vector3, sleeper: GameSleeper): void {
 	ExecuteOrder.HoldOrdersTarget = pos
-	if (sleeper.Sleeping("moveSleep")) {
+	const key = unit.Index + "_moveSleep"
+	if (sleeper.Sleeping(key)) {
 		return
 	}
 	let inputLag = GameState.InputLag * 1000
 	if (inputLag >= 150) {
-		inputLag /= 3
+		inputLag /= 3 // TODO: compensation lag from server
 	}
 	unit.MoveTo(pos, false, true)
-	sleeper.Sleep(Math.max(inputLag, GameState.TickInterval * 1000), "moveSleep")
+	sleeper.Sleep(Math.max(inputLag, GameState.TickInterval * 1000), key)
 }
 
 export const StopUnit = (unit: Unit) => {

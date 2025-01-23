@@ -3,6 +3,8 @@ import {
 	Entity,
 	EntityManager,
 	ExecuteOrder,
+	GameSleeper,
+	GameState,
 	Menu as MenuSDK,
 	Unit,
 	Vector3
@@ -30,9 +32,17 @@ export const getCenterDirection = (units: Entity[]) =>
 		)
 	)
 
-export function MoveUnit(unit: Unit, pos: Vector3): void {
-	unit.MoveTo(pos, false, true)
+export function MoveUnit(unit: Unit, pos: Vector3, sleeper: GameSleeper): void {
 	ExecuteOrder.HoldOrdersTarget = pos
+	if (sleeper.Sleeping("moveSleep")) {
+		return
+	}
+	let inputLag = GameState.InputLag * 1000
+	if (inputLag >= 150) {
+		inputLag /= 3
+	}
+	unit.MoveTo(pos, false, true)
+	sleeper.Sleep(Math.max(inputLag, GameState.TickInterval * 1000), "moveSleep")
 }
 
 export const StopUnit = (unit: Unit) => {

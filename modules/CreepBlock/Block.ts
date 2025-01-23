@@ -134,7 +134,6 @@ export function Update() {
 	}
 
 	let countUnits = 0
-
 	switch (StateUnits.SelectedID) {
 		case 0: {
 			// local
@@ -187,8 +186,7 @@ export function Update() {
 		default:
 			break
 	}
-	const lag = GameState.InputLag * 1000
-	sleeper.Sleep(countUnits * 25 + lag, "tick")
+	sleeper.Sleep(countUnits * 25, "tick")
 }
 
 export function Draw(): string | undefined {
@@ -265,11 +263,8 @@ function GoingToBestPosition(unit: Unit): boolean {
 	if (unit.IsInRange(closest, 50)) {
 		return false
 	}
-	if (!sleeper.Sleeping("ToBestPosition")) {
-		MoveUnit(unit, closest)
-	}
+	MoveUnit(unit, closest, sleeper)
 	ControllablesUnitsDraw.set(unit, "Moving to the best position")
-	sleeper.Sleep(GameState.InputLag * 1000, "ToBestPosition")
 	return true
 }
 
@@ -332,7 +327,7 @@ function Stopping(
 ) {
 	if (CheckTowerNear(unit)) {
 		ControllablesUnitsDraw.set(unit, "Less stopping (Tower near)")
-		MoveUnit(unit, moveDirection)
+		MoveUnit(unit, moveDirection, sleeper)
 		return
 	}
 	ControllablesUnitsDraw.set(unit, "Stopping ")
@@ -374,7 +369,7 @@ function Stopping(
 			return false
 		}
 
-		MoveUnit(unit, movePosition)
+		MoveUnit(unit, movePosition, sleeper)
 		return true
 	})
 
@@ -390,6 +385,6 @@ function Stopping(
 			unit.RotationRad + Math.degreesToRadian(unit.RotationDifference)
 		) > 1.5
 	) {
-		MoveUnit(unit, unit.Position.Extend(moveDirection, 10))
+		MoveUnit(unit, unit.Position.Extend(moveDirection, 10), sleeper)
 	}
 }

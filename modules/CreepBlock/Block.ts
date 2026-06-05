@@ -81,6 +81,7 @@ Key.OnValue(caller => {
 export function GameEnded() {
 	sleeper.FullReset()
 	turnStateBlock = false
+	lastEnabled = false
 	ControllablesUnitsDraw.clear()
 }
 

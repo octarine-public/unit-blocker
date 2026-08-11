@@ -1,10 +1,3 @@
-import {
-	GameRules,
-	GameState,
-	Hero,
-	LocalPlayer,
-	Vector3
-} from "github.com/octarine-public/wrapper/index"
 
 import { AddOrUpdateParticle, RemoveParticle } from "../../base/DrawParticle"
 import { stateMain } from "../../base/MenuBase"
@@ -28,24 +21,24 @@ export const BestPosition = [
 
 export function DrawParticles() {
 	if (
-		GameRules === undefined ||
+		Dota2SDK.GameRules === undefined ||
 		GameState.MapName.startsWith("hero_demo") ||
 		!stateMain.value ||
 		!DrawState.value ||
 		!DrawHelpPosition.value ||
-		!GameRules.IsInGame ||
+		!Dota2SDK.GameRules.IsInGame ||
 		GameState.RawGameTime <= 5
 	) {
 		return
 	}
 
-	lastHero = LocalPlayer?.Hero
+	lastHero = Dota2SDK.LocalPlayer?.Hero
 
-	if (lastHero === undefined || LocalPlayer === undefined) {
+	if (lastHero === undefined || Dota2SDK.LocalPlayer === undefined) {
 		return
 	}
 
-	const teamParticles = BestPosition[LocalPlayer.Team - 2]
+	const teamParticles = BestPosition[Dota2SDK.LocalPlayer.Team - 2]
 
 	if (teamParticles === undefined) {
 		return

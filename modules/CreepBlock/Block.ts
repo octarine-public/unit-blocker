@@ -1,18 +1,3 @@
-import {
-	Creep,
-	EntityManager,
-	ExecuteOrder,
-	GameSleeper,
-	GameState,
-	LocalPlayer,
-	Menu,
-	RendererSDK,
-	Tower,
-	Unit,
-	Vector3,
-	VKeys,
-	VMouseKeys
-} from "github.com/octarine-public/wrapper/index"
 
 import { stateMain } from "../../base/MenuBase"
 import {
@@ -138,7 +123,7 @@ export function Update() {
 	switch (StateUnits.SelectedID) {
 		case 0: {
 			// local
-			const localHero = LocalPlayer?.Hero
+			const localHero = Dota2SDK.LocalPlayer?.Hero
 			if (localHero === undefined || !baseCheckUnit(localHero)) {
 				return
 			}
@@ -171,7 +156,7 @@ export function Update() {
 				return
 			}
 
-			const localHero = LocalPlayer?.Hero
+			const localHero = Dota2SDK.LocalPlayer?.Hero
 
 			if (localHero !== undefined && baseCheckUnit(localHero)) {
 				controllables.remove(localHero)

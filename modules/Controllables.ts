@@ -1,14 +1,3 @@
-import {
-	DOTAUnitMoveCapability,
-	Entity,
-	EntityManager,
-	ExecuteOrder,
-	GameSleeper,
-	GameState,
-	Menu as MenuSDK,
-	Unit,
-	Vector3
-} from "github.com/octarine-public/wrapper/index"
 
 export const baseCheckUnit = (ent: Unit) =>
 	ent.IsAlive &&
@@ -50,7 +39,7 @@ export const StopUnit = (unit: Unit) => {
 	unit.OrderStop()
 }
 
-export function MenuControllables(root: MenuSDK.Node) {
+export function MenuControllables(root: Menu.Node) {
 	const ControllablesTree = root.AddNode("Additional settings")
 
 	const StateUnits = ControllablesTree.AddDropdown(

@@ -1,10 +1,9 @@
-import { Menu, Utils } from "github.com/octarine-public/wrapper/index"
 
 const path = "scripts_files/translate"
 const base = "github.com/octarine-public/unit-blocker"
 const Load = (name: string) => {
 	return new Map<string, string>(
-		Object.entries(Utils.readJSON(`${base}/${path}/${name}.json`))
+		Object.entries(SharedSDK.readJSON(`${base}/${path}/${name}.json`))
 	)
 }
 Menu.Localization.AddLocalizationUnit("russian", Load("ru"))

@@ -1,15 +1,5 @@
 import "./Translate"
 
-import {
-	DOTAGameUIState,
-	EventsSDK,
-	GameRules,
-	GameState,
-	InputEventSDK,
-	LocalPlayer,
-	RendererSDK
-} from "github.com/octarine-public/wrapper/index"
-
 import * as DrawParticle from "./base/DrawParticle"
 import { stateMain } from "./base/MenuBase"
 import * as CreepBlock from "./modules/CreepBlock/Block"
@@ -17,7 +7,7 @@ import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHel
 // import * as HeroBlock from "./modules/HeroBlock/Block"
 
 const IsValid = () => {
-	return stateMain.value && LocalPlayer !== undefined && LocalPlayer.Hero !== undefined
+	return stateMain.value && Dota2SDK.LocalPlayer !== undefined && Dota2SDK.LocalPlayer.Hero !== undefined
 }
 
 EventsSDK.on("GameEnded", () => {
@@ -49,7 +39,7 @@ EventsSDK.on("PostDataUpdate", delta => {
 EventsSDK.on("Draw", () => {
 	if (
 		!stateMain.value ||
-		!GameRules?.IsInGame ||
+		!Dota2SDK.GameRules?.IsInGame ||
 		GameState.UIState !== DOTAGameUIState.DOTA_GAME_UI_DOTA_INGAME
 	) {
 		return

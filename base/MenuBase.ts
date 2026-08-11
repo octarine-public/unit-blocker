@@ -1,6 +1,5 @@
-import { Menu as MenuSDK } from "github.com/octarine-public/wrapper/index"
-
-export const Menu = MenuSDK.AddEntryDeep(
+// the local name shadows the Menu namespace, so the tree is built through the alias object
+export const Menu = Dota2SDK.Menu.AddEntryDeep(
 	["Utility", "Unit Blocker"],
 	["panorama/images/hud/reborn/icon_speed_psd.vtex_c"]
 )

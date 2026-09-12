@@ -34,5 +34,9 @@
 		"type": "git",
 		"directory": "/",
 		"url": "https://github.com/octarine-public/unit-blocker"
-	}
+	},
+	"octarineBundle": true,
+	"octarineMinimize": true,
+	"octarineObfuscate": true,
+	"octarineTreeShaking": true
 }

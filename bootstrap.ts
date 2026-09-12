@@ -4,16 +4,20 @@ import * as DrawParticle from "./base/DrawParticle"
 import { stateMain } from "./base/MenuBase"
 import * as CreepBlock from "./modules/CreepBlock/Block"
 import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHelp"
-// import * as HeroBlock from "./modules/HeroBlock/Block"
+import { canvas } from "./render"
 
 const IsValid = () => {
-	return stateMain.value && Dota2SDK.LocalPlayer !== undefined && Dota2SDK.LocalPlayer.Hero !== undefined
+	return (
+		stateMain.value &&
+		Dota2SDK.LocalPlayer !== undefined &&
+		Dota2SDK.LocalPlayer.Hero !== undefined
+	)
 }
 
 EventsSDK.on("GameEnded", () => {
 	DrawParticle.GameEnded()
 	CreepBlock.GameEnded()
-	// HeroBlock.GameEnded()
+
 	RemoveParticles()
 })
 
@@ -33,7 +37,6 @@ EventsSDK.on("PostDataUpdate", delta => {
 	}
 
 	CreepBlock.Update()
-	// HeroBlock.Update()
 })
 
 EventsSDK.on("Draw", () => {
@@ -48,14 +51,11 @@ EventsSDK.on("Draw", () => {
 	let textAroundMouse = ""
 
 	textAroundMouse += CreepBlock.Draw() ?? ""
-
-	// textAroundMouse += HeroBlock.Draw() ?? ""
-
 	if (textAroundMouse === "") {
 		return
 	}
 
-	RendererSDK.TextAroundMouse(textAroundMouse)
+	canvas.CursorText(textAroundMouse, { color: Color.Yellow, size: 30 + 4 })
 })
 
 EventsSDK.on("PrepareUnitOrders", () => {

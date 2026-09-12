@@ -1,5 +1,5 @@
-
 import { stateMain } from "../../base/MenuBase"
+import { canvas } from "../../render"
 import {
 	baseCheckUnit,
 	Controllables,
@@ -122,7 +122,6 @@ export function Update() {
 	let countUnits = 0
 	switch (StateUnits.SelectedID) {
 		case 0: {
-			// local
 			const localHero = Dota2SDK.LocalPlayer?.Hero
 			if (localHero === undefined || !baseCheckUnit(localHero)) {
 				return
@@ -165,7 +164,7 @@ export function Update() {
 			countUnits += PreparingUnits(controllables) || 0
 			break
 		}
-		// case 1: PreparingUnits(SelectedStopping()); break;
+
 		case 2:
 			countUnits += PreparingUnits(Controllables())
 			break
@@ -192,7 +191,7 @@ export function Draw(): string | undefined {
 			const wts = RendererSDK.WorldToScreen(unit.Position)
 
 			if (wts !== undefined) {
-				RendererSDK.Text(text, wts)
+				canvas.Text(text, wts, { size: 18 + 4 })
 			}
 		})
 	}

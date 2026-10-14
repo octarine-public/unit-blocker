@@ -1,2 +1,8 @@
 node_modules/
 scripts/
+# test bench recordings (~1 GB); only the reference data the reports read is kept
+tools/block-test/out/*
+!tools/block-test/out/baseline.json
+!tools/block-test/out/free-curve.json
+!tools/block-test/out/human.json
+tools/block-test/bt.next.js

@@ -21,9 +21,16 @@ const DrawHelpPosition = DrawTree.AddToggle(
 	"Drawing help particle where the best position for block creeps.\nAuto removed in 5 min after creating"
 )
 
+const DrawEvaluation = DrawTree.AddToggle(
+	"Block evaluation",
+	true,
+	"Lane line, towers, creep roles and velocities,\nthe point the unit is going to and the block time gained"
+)
+
 export {
 	CenterCamera,
 	CountUnits,
+	DrawEvaluation,
 	DrawHelpPosition,
 	DrawState,
 	GoToBestPosition,

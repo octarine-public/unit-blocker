@@ -3,6 +3,7 @@ import "./Translate"
 import * as DrawParticle from "./base/DrawParticle"
 import { stateMain } from "./base/MenuBase"
 import * as CreepBlock from "./modules/CreepBlock/Block"
+import "./modules/CreepBlock/DevHook"
 import { DrawParticles, RemoveParticles } from "./modules/CreepBlock/ParticleHelp"
 import { canvas } from "./render"
 
@@ -63,34 +64,4 @@ EventsSDK.on("PrepareUnitOrders", () => {
 		return true
 	}
 	return CreepBlock.PrepareUnitOrders()
-})
-
-InputEventSDK.on("KeyDown", key => {
-	if (!IsValid()) {
-		return true
-	}
-	return CreepBlock.KeyDown(key)
-})
-
-InputEventSDK.on("MouseKeyDown", key => {
-	if (!IsValid()) {
-		return true
-	}
-	return CreepBlock.MouseDown(key)
-})
-
-InputEventSDK.on("KeyUp", key => {
-	if (!IsValid()) {
-		return true
-	}
-	CreepBlock.KeyUp(key)
-	return true
-})
-
-InputEventSDK.on("MouseKeyUp", key => {
-	if (!IsValid()) {
-		return true
-	}
-	CreepBlock.MouseUp(key)
-	return true
 })

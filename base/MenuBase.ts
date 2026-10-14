@@ -23,7 +23,7 @@ export function MenuBase(
 			0,
 			35,
 			0,
-			"Biggest value to smaller blocks but more accurately.\nDefault for many heroes - 16"
+			"Lower blocks tighter and longer but lets a creep slip by more often,\nhigher blocks shorter. Default - 16"
 		)
 	}
 }

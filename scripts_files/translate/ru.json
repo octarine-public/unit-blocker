@@ -19,8 +19,10 @@
 	"Turn on / Turn off": "Включить/выключить",
 	"Status around mouse": "Статус у мыши",
 	"Status around units(or Heroes)": "Статус у юнитов (или героев)",
-	"Biggest value to smaller blocks but more accurately.\nDefault for many heroes - 16": "Наибольшее значение для меньших блоков, но более точное.\nПо умолчанию для многих героев - 16",
 	"Drawing help particle where the best position for block creeps.\nAuto removed in 5 min after creating": "Частица помощи в рисовании, где лучшая позиция для крип блока.\nАвтоматически удаляется через 5 минут после создания",
 	"Going to the best position when\nwaiting creeps (Visual: Help position)": "Переход в лучшую позицию\nпри ожидании крипов (визуально: позиция помощи)",
-	"More than two units(or heroes) for\none line of creeps is not recommended": "Более двух юнитов(или героев) на одну линию\nкрипов не рекомендуется"
+	"More than two units(or heroes) for\none line of creeps is not recommended": "Более двух юнитов(или героев) на одну линию\nкрипов не рекомендуется",
+	"Lower blocks tighter and longer but lets a creep slip by more often,\nhigher blocks shorter. Default - 16": "Меньше — плотнее и дольше блок, но крип чаще проскальзывает,\nбольше — короче блок. По умолчанию - 16",
+	"Block evaluation": "Оценка блока",
+	"Lane line, towers, creep roles and velocities,\nthe point the unit is going to and the block time gained": "Маршрут крипов, башни, роли и скорости крипов,\nточка, куда идёт юнит, и выигранное время блока"
 }

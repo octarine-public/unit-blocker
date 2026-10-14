@@ -1,11 +1,10 @@
-
-const path = "scripts_files/translate"
-const base = "github.com/octarine-public/unit-blocker"
-const Load = (name: string) => {
-	return new Map<string, string>(
-		Object.entries(SharedSDK.readJSON(`${base}/${path}/${name}.json`))
+const Load = (name: string) =>
+	new Map<string, string>(
+		Object.entries(
+			SharedSDK.readJSON<Record<string, string>>(`translate/${name}.json`)
+		)
 	)
-}
+
 Menu.Localization.AddLocalizationUnit("russian", Load("ru"))
 Menu.Localization.AddLocalizationUnit("english", Load("en"))
-Menu.Localization.AddLocalizationUnit("сhinese", Load("cn"))
+Menu.Localization.AddLocalizationUnit("chinese", Load("cn"))

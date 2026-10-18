@@ -297,7 +297,7 @@ function events(run) {
 	}
 	for (const kind of ["escape", "escapeRanged"]) {
 		const e = r[kind]
-		if (e) push(e.t, `ESCAPE: creep 100 ahead of the hero at s ${e.s} lat ${e.lat}, hero ${e.heroS}/${e.heroLat}`)
+		if (e) push(e.t, `ESCAPE: creep past the escape threshold ahead of the hero at s ${e.s} lat ${e.lat}, hero ${e.heroS}/${e.heroLat}`)
 	}
 	if (r.release !== null && r.release !== undefined) push(r.release, "blocker released")
 	if (r.why === "escape") push(samples[samples.length - 1].t, "attempt aborted (creep 150 ahead)")
@@ -367,7 +367,7 @@ function autopsy(run) {
 			? `wave split ${(L.t - splitT).toFixed(2)}s before the loss (hero holding ${Math.round(100 * mean(before.map(smp => (smp.a === 1 ? 1 : 0))))}% of the 0.6s before)`
 			: "wave compact at the loss"
 	const side = q.dl > 0 ? "L" : "R"
-	const head = `${ci.name} escaped on ${side} in ${phase}: lost at t ${L.t.toFixed(2)} (hero s ${heroS}, creep ds ${q.ds} dlat ${q.dl}, role ${ROLE[q.role] ?? "?"}), 100 ahead at t ${esc.t}; ${splitNote}`
+	const head = `${ci.name} escaped on ${side} in ${phase}: lost at t ${L.t.toFixed(2)} (hero s ${heroS}, creep ds ${q.ds} dlat ${q.dl}, role ${ROLE[q.role] ?? "?"}), escaped (threshold ahead) at t ${esc.t}; ${splitNote}`
 	const lines = []
 	for (let i = 0, next = L.t - 1; i < samples.length; i++) {
 		const smp = samples[i]

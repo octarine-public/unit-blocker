@@ -125,6 +125,100 @@
 		SendToConsole(`creep_block_start ${o.lane} ${o.melee} ${o.ranged} river ${o.hero}`)
 	}
 
+	// On-screen scoreboard of the attempts run in this game session, per tag: clean ones, failed
+	// ones (a creep got more than escapeAhead past the hero) and the attempt in progress. It lives on
+	// globalThis so a re-injection keeps the counts; __bt.resetScore() clears them.
+	const score = (globalThis.__btScore ??= new Map())
+	const canvas = (globalThis.__btCanvas ??= new MenuSDK.Canvas("block-test"))
+	bt.resetScore = () => score.clear()
+
+	function addScore(r, o) {
+		if (o.mode !== "block" || r.n === 0) return
+		const row = score.get(r.tag) ?? { ok: 0, fail: 0, gain: 0, gains: 0, last: "", lost: [] }
+		const voided = r.minimized || r.slowFrames > 10
+		if (voided) {
+			// the game was minimized or starved: the attempt is repeated, not counted
+		} else if (r.failed) {
+			row.fail++
+			const e = r.escape ?? r.escapeRanged
+			const stall = r.slowFrames > 0 ? ` (game stalled: ${r.slowFrames} slow frames, gap ${r.maxGap}s)` : ""
+			if (e) row.lost.push(`${r.escape ? "melee" : "ranged"} got by at ${e.t}s, s ${e.s}${stall}`)
+		} else {
+			row.ok++
+			if (r.t1Mean !== null && o.freeT1 !== undefined) {
+				row.gain += r.t1Mean - o.freeT1
+				row.gains++
+			}
+		}
+		row.last = (row.last + (voided ? "-" : r.failed ? "X" : "o")).slice(-30)
+		score.delete(r.tag)
+		score.set(r.tag, row)
+	}
+
+	const frames = { n: 0, since: Date.now(), fps: 0, last: Date.now() }
+	// Draw stops while the window is minimized; ticks go on at ~10 Hz
+	const minimized = () => Date.now() - frames.last > 500
+
+	function onDraw() {
+		frames.n++
+		frames.last = Date.now()
+		const ms = Date.now() - frames.since
+		if (ms >= 1000) {
+			frames.fps = Math.round((frames.n * 1000) / ms)
+			frames.n = 0
+			frames.since = Date.now()
+		}
+		const cur = bt.cur
+		if (bt.showScore === false || (score.size === 0 && cur?.phase !== "run")) return
+		const size = RendererSDK.WindowSize,
+			w = 470,
+			lh = 22,
+			x = size.x - w - 16,
+			lines = score.size + 3 + (cur?.phase === "run" ? 1 : 0)
+		let y = Math.round(size.y * 0.2)
+		canvas.Rect(new Vector2(x, y), new Vector2(w, lines * lh + 18), { color: new Color(12, 14, 18, 200), radius: 8 })
+		y += 8
+		const text = (s, dx, color = Color.White, size = 15) =>
+			canvas.Text(String(s), new Vector2(x + dx, y), { color, size, outline: true })
+		const cols = [12, 200, 252, 308, 360, 420]
+		text("Creep block: attempts this session", cols[0], Color.White, 16)
+		text(`${frames.fps} FPS`, cols[4], frames.fps < 30 ? new Color(255, 90, 80) : new Color(170, 170, 170), 14)
+		y += lh + 2
+		const gray = new Color(170, 170, 170)
+		;["config", "runs", "clean", "FAIL", "gain", ""].forEach((h, i) => text(h, cols[i], gray, 14))
+		y += lh
+		const red = new Color(255, 90, 80),
+			green = new Color(110, 220, 120)
+		for (const [tag, row] of score) {
+			text(tag.length > 22 ? tag.slice(0, 21) + "…" : tag, cols[0])
+			text(row.ok + row.fail, cols[1])
+			text(row.ok, cols[2], green)
+			text(row.fail, cols[3], row.fail > 0 ? red : Color.White)
+			text(row.gains ? (row.gain / row.gains >= 0 ? "+" : "") + (row.gain / row.gains).toFixed(2) : "-", cols[4])
+			text(row.last.slice(-6), cols[5], row.last.endsWith("X") ? red : green, 14)
+			y += lh
+		}
+		if (cur?.phase === "run") {
+			const lead = Math.round(cur.lead ?? -1e9)
+			const t = (GameState.RawGameTime - cur.spawn).toFixed(1)
+			const near = lead > (bt.opts.escapeAhead ?? 150) * 0.66
+			text(
+				`now ${bt.opts.tag}: ${t}s, front creep ${lead > -1e8 ? (lead >= 0 ? "+" : "") + lead : "-"} (FAIL at +${bt.opts.escapeAhead ?? 150})`,
+				cols[0],
+				near ? red : gray,
+				14
+			)
+			y += lh
+		}
+		const lastFail = [...score].reverse().find(([, row]) => row.lost.length)
+		text(
+			lastFail ? `last FAIL ${lastFail[0]}: ${lastFail[1].lost[lastFail[1].lost.length - 1]}` : "no creep has got by",
+			cols[0],
+			lastFail ? red : green,
+			14
+		)
+	}
+
 	function finishAttempt(why) {
 		const cur = bt.cur
 		const o = bt.opts
@@ -151,15 +245,20 @@
 			t1: cs.map(c => c.t1Side ?? "?").join(""),
 			release: rel(cur.release),
 			failed: why === "escape" || cur.escape !== null || (cur.escapeRanged ?? null) !== null,
-			orders: cur.orders.length
+			orders: cur.orders.length,
+			maxGap: +(cur.maxGap ?? 0).toFixed(3),
+			slowFrames: cur.slowFrames ?? 0,
+			minimized: cur.minimized === true
 		}
 		bt.results.push(r)
+		addScore(r, o)
 		bt.last = cur
 		const meta = {
 			lane: o.lane,
 			hero: o.hero,
 			heroSpeed: Math.round(LocalPlayer?.Hero?.MoveSpeed ?? 0),
 			tune: o.tune ?? {},
+			convars: o.convars ?? {},
 			geo: { t2: geo.t2 && { s: Math.round(geo.t2.s), lat: Math.round(geo.t2.lat) }, t1: geo.t1 && { s: Math.round(geo.t1.s), lat: Math.round(geo.t1.lat) }, river: Math.round(geo.river) },
 			creeps: cs.map(c => ({ idx: c.idx, ranged: c.ranged }))
 		}
@@ -192,6 +291,12 @@
 				return
 			}
 			if (bt.next !== undefined && now >= bt.next) {
+				// a minimized game draws nothing and updates ~10 times a second: wait until it is back
+				if (minimized()) {
+					bt.waiting = "game window minimized"
+					return
+				}
+				bt.waiting = null
 				bt.armed = false
 				bt.next = undefined
 				startAttempt()
@@ -248,11 +353,12 @@
 				const ahead = p.s - hp.s
 				if (!rec.ranged) cur.maxAhead = Math.max(cur.maxAhead, ahead)
 				const key = rec.ranged ? "escapeRanged" : "escape"
-				if ((cur[key] ?? null) === null && ahead > 100) {
+				if ((cur[key] ?? null) === null && ahead > o.escapeAhead) {
 					cur[key] = { t: +(now - cur.spawn).toFixed(2), s: Math.round(p.s), lat: Math.round(p.lat), heroS: Math.round(hp.s), heroLat: Math.round(hp.lat) }
 				}
 			}
 		}
+		cur.lead = lead - hp.s
 		const plan = bt.keyHeld ? globalThis.__ubPlans?.get(hero) : undefined
 		if (plan !== undefined) {
 			sample.a = plan.Action
@@ -281,6 +387,15 @@
 			}
 			const roles = new Map(plan.Creeps.map(v => [v.Creep.Index, v.Role]))
 			for (const c of sample.c) c.push(roles.get(c[0]) ?? -1)
+		}
+		// frame stalls while the key is held: the planner and its orders run per frame, a gap longer
+		// than two ticks is the game starved in the background, not the planner
+		const prev = cur.samples[cur.samples.length - 1]
+		if (bt.keyHeld && minimized()) cur.minimized = true
+		if (bt.keyHeld && prev !== undefined) {
+			const gap = sample.t - prev.t
+			if (gap > 0.08) cur.slowFrames = (cur.slowFrames ?? 0) + 1
+			cur.maxGap = Math.max(cur.maxGap ?? 0, gap)
 		}
 		cur.samples.push(sample)
 		melee.sort((a, b) => a - b)
@@ -327,16 +442,19 @@
 			quick: true,
 			abortAhead: 150,
 			releaseAfterT1: 100,
+			escapeAhead: 150,
 			holdMax: 40,
 			...opts
 		}
 		ExecuteOrder.DisableHumanizer = false
+		uncapFps()
 		setupLane(bt.opts.lane)
 		const tuning = globalThis.__ubTuning
 		if (tuning !== undefined) {
 			globalThis.__ubTuningDefaults ??= { ...tuning }
 			Object.assign(tuning, globalThis.__ubTuningDefaults, bt.opts.tune ?? {})
 		}
+		applyConvars(bt.opts.convars ?? {})
 		const m = findKey()
 		if (m?.state !== undefined && !m.state.value) {
 			m.state.value = true
@@ -358,6 +476,39 @@
 		bt.next = GameState.RawGameTime
 		return bt.opts
 	}
+
+	// Full frame rate with the game in the background: unfocused, the engine sleeps
+	// engine_no_focus_sleep ms (5 by default) every frame, the planner and the samples run per frame.
+	// Applied on injection and before every run, since a new game resets it.
+	function uncapFps() {
+		SendToConsole2("engine_no_focus_sleep 0")
+		SendToConsole2("fps_max 0")
+	}
+	uncapFps()
+
+	// Server convars of a run ({ name: value }): cheat-flagged ones need sv_cheats, which ConVars.Set
+	// does not get past, so they go through the console. Every convar a run has set returns to its
+	// default (read before the first change) on runs that do not name it; sv_cheats goes back off once
+	// all of them are at their defaults.
+	function applyConvars(convars) {
+		const defaults = (globalThis.__btConvarDefaults ??= {})
+		for (const name of Object.keys(convars)) {
+			if (!(name in defaults)) defaults[name] = ConVars.Get(name)
+		}
+		const names = Object.keys(defaults)
+		if (names.length === 0) return
+		const cheats = names.some(name => name in convars)
+		if (cheats) SendToConsole2("sv_cheats 1")
+		for (const name of names) {
+			const value = name in convars ? convars[name] : defaults[name]
+			SendToConsole2(`${name} ${typeof value === "boolean" ? Number(value) : value}`)
+		}
+		if (!cheats) {
+			SendToConsole2("sv_cheats 0")
+			delete globalThis.__btConvarDefaults
+		}
+	}
+	bt.restoreConvars = () => applyConvars({})
 
 	// Walks the hero to lane point (s, lat) and saves it as the trainer's hero start for that lane.
 	bt.placeStart = (lane, s, lat = 0) => {
@@ -389,7 +540,8 @@
 		queue: bt.queue,
 		phase: bt.cur?.phase ?? null,
 		t: bt.cur?.spawn ? +(GameState.RawGameTime - bt.cur.spawn).toFixed(1) : null,
-		results: bt.results.length
+		results: bt.results.length,
+		waiting: bt.waiting ?? null
 	})
 
 	function onOrder(order) {
@@ -418,10 +570,12 @@
 		bt.stop()
 		EventsSDK.removeListener("PostDataUpdate", onTick)
 		EventsSDK.removeListener("PrepareUnitOrders", onOrder)
+		EventsSDK.removeListener("Draw", onDraw)
 	}
 
 	EventsSDK.on("PostDataUpdate", onTick)
 	EventsSDK.on("PrepareUnitOrders", onOrder, -1000)
+	EventsSDK.on("Draw", onDraw)
 	globalThis.__bt = bt
 	return setupLane("mid")
 })()

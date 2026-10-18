@@ -17,6 +17,7 @@ server (or `console.bat`) has to be running.
 | `plan-trace.cjs` | Frame-by-frame timeline of a saved run: hero, creeps relative to the hero, planner action and note |
 | `escapes.cjs` | The situation right before every escape across runs |
 | `contact.cjs` | Statistics of hero–creep contact episodes |
+| `stops.cjs` | Creeps' stops against the server's collision rules (`dota2-ida/notes/creep/REPORT.md`): closest hero–creep distance, every stop's length in ticks with the unit in the way and the rule (hard contact / look-ahead), the side creeps walk off to; `--key` only while the key is held, `--still` for a hero standing still (no key), `--list` every stop |
 | `compare.cjs` | Technique profile of clean runs: hero forward speed, standing time, orders, gap to the front creep |
 
 ## What a run records
@@ -100,8 +101,12 @@ node report.cjs a-pudge --events 3
 ```
 
 Run options (`__bt.run`, series and ab.cjs configs): `lane`, `hero`, `melee`, `ranged`, `tune` (planner
-`Tuning` overrides), `mode` (`block` / `free` / `manual`), `armDistance` (hold the key only once a
-creep is that close), `goBest: false` (the script does not walk the hero to its best position),
+`Tuning` overrides), `convars` (server convars for the run, e.g.
+`{"dota_unit_blocked_wait_time_long": 2}`: set through the console with `sv_cheats 1`, since
+`ConVars.Set` does not get past the cheat flag; a run that does not name a convar an earlier run set
+puts it back to its default and `sv_cheats` back to 0, `__bt.restoreConvars()` does it by hand),
+`mode` (`block` / `free` / `manual`), `armDistance` (hold the key only once a
+creep is that close; 1 = never, the hero just stands at its start), `goBest: false` (the script does not walk the hero to its best position),
 `start: [s, lat]` (walk the hero there and save it as the trainer's start before the run; placed only
 when it changes, so in an A/B give every config a start or none).
 
@@ -111,9 +116,14 @@ active the cursor stays at the last order instead of returning to the real mouse
 
 Options: `mode` `block` | `free` | `manual`, `hero` (`pudge`, `axe`, `sven`, `juggernaut`, `nevermore`,
 `invoker`), `lane`, `melee`, `ranged`, `n`, `pause` (seconds between attempts), `tune` (overrides for
-the planner's `Tuning`, through the dev hook), `abortAhead` (a creep this far ahead of the hero ends
-a blocking attempt as failed, 150 by default), `maxFail` (failed attempts that reject the config, 3),
+the planner's `Tuning`, through the dev hook), `escapeAhead` (a creep this far ahead of the hero
+along the lane while the key is held is a lost creep and the attempt failed, 150 by default; it was
+100 until the `nz` series), `abortAhead` (a creep this far ahead ends the attempt there, 150 by
+default), `maxFail` (failed attempts that reject the config, 3),
 `humanMargin` (seconds a config may trail the human reference before it is rejected, 0.5).
+`ab.cjs` also takes `minGain` / `minGainAfter` (drop a config whose clean attempts average below
+that once it has that many) and `minAttemptGain` (an attempt that keeps every creep but gains less
+than that at T1 counts as a failure, printed LOW; the bar is 5).
 
 - `free` moves the hero out of the way and records the unblocked baseline into `out/baseline.json`;
   every delay printed is relative to it.
@@ -124,7 +134,36 @@ a blocking attempt as failed, 150 by default), `maxFail` (failed attempts that r
 Results: `T1` is when the first creep passes the own tier-one tower, `mean` the mean over the wave,
 both as seconds gained over the free wave. `t2`/`t1` list the side each creep passed the tower on
 (`L`/`R` relative to the travel direction). `ESC`/`rng` mark a melee/ranged creep that got more than
-100 units ahead of the hero while the blocker was held.
+`escapeAhead` (150) units ahead of the hero while the blocker was held.
 
 The game must have Octarine's *Humanizer* setting on: without it scripts' orders are dropped. The
 harness switches it on at runtime for the session only.
+
+The planner's defaults the harness resets to before every run (`__ubTuningDefaults`) are copied from
+the live `Tuning` on the first run, so they carry the menu's *Sensitivity* (`lookAhead`, `gap`,
+`pressSpread`). Every logged series is at Sensitivity 16: until nz31 that was lookAhead 0.15, gap −3
+(6 before r12), pressSpread 0; from nz32 the mapping is shifted so that 16 gives the nz30 tuning,
+lookAhead 0.13, gap −4.5, pressSpread 80. Check `__ubTuning` and pin them when the menu is set
+otherwise, e.g.
+`node inject.cjs -e "Object.assign(__ubTuning, {lookAhead: 0.13, gap: -4.5, pressSpread: 80}); globalThis.__ubTuningDefaults = {...__ubTuning}; 1"`
+(again after every `reload.cjs`). Pin only right after `reload.cjs`: the live `Tuning` keeps the
+overrides of the last run (`tune`), and pinning then makes them every later run's defaults (an
+`mpc 1` left over this way spoiled a first nz39).
+
+The frame rate must not drop while Dota is in the background (alt-tab): the planner, its orders and
+the samples run per frame, and unfocused the engine sleeps `engine_no_focus_sleep` ms (5 by default)
+every frame. `bt.js` sets `engine_no_focus_sleep 0` and `fps_max 0` (no cap) through the console on
+injection and before every run, `reload.cjs` too; a new game resets them, the next run puts them
+back. Check with `node inject.cjs -e "ConVars.Get('engine_no_focus_sleep')"`.
+
+While attempts run, `bt.js` draws a scoreboard on the game screen (top right): per tag the attempts,
+clean ones, FAIL (a creep more than `escapeAhead` past the hero), the mean gain of the clean ones and
+the last attempts (green o clean, red X lost), the attempt in progress with the front creep's lead
+over the hero, and the last loss. The counts live on `globalThis` (a re-injection keeps them, a
+`reload.cjs` clears them); `__bt.resetScore()` clears them, `__bt.showScore = false` hides it.
+`node live.cjs nz` prints the same from `out/results2.jsonl` in a terminal.
+
+From Dota's main menu `SendToConsole` does nothing; `SendToConsole2` runs the command through the
+game's own console, so the custom game can be started with
+`node inject.cjs -e "SendToConsole2('dota_launch_custom_game fps_benchmark dota')"`. A new game
+forgets the trainer's hero starts: place them again (`__bt.placeStart` or the `start` option).

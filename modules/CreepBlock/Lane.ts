@@ -33,7 +33,6 @@ interface Circle {
 }
 
 const OBSTACLE_REACH = 260
-const ROUTE_CLEARANCE = 40
 const ARC_STEP = 0.2
 
 function Rotate(x: number, y: number, angle: number): [number, number] {
@@ -43,7 +42,12 @@ function Rotate(x: number, y: number, angle: number): [number, number] {
 }
 
 /** Tangent point on `circle` for a straight approach from (px, py) that keeps the circle on its `side`. */
-function TangentFrom(px: number, py: number, circle: Circle, side: number): Nullable<[number, number]> {
+function TangentFrom(
+	px: number,
+	py: number,
+	circle: Circle,
+	side: number
+): Nullable<[number, number]> {
 	const vx = circle.x - px,
 		vy = circle.y - py,
 		dist = Math.hypot(vx, vy)
@@ -56,11 +60,21 @@ function TangentFrom(px: number, py: number, circle: Circle, side: number): Null
 	return [px + ux * length, py + uy * length]
 }
 
-function SegmentDistance(ax: number, ay: number, bx: number, by: number, x: number, y: number): number {
+function SegmentDistance(
+	ax: number,
+	ay: number,
+	bx: number,
+	by: number,
+	x: number,
+	y: number
+): number {
 	const dx = bx - ax,
 		dy = by - ay,
 		len2 = dx * dx + dy * dy,
-		t = len2 < 1e-6 ? 0 : Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / len2))
+		t =
+			len2 < 1e-6
+				? 0
+				: Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / len2))
 	return Math.hypot(ax + dx * t - x, ay + dy * t - y)
 }
 
@@ -153,7 +167,7 @@ function NaturalRoute(points: Vector3[], towers: Tower[], clearance: number): Ve
 			}
 			const steps = Math.max(1, Math.ceil(sweep / ARC_STEP))
 			for (let k = 0; k <= steps; k++) {
-				const angle = a0 + (clockwise ? -1 : 1) * (sweep * k) / steps,
+				const angle = a0 + ((clockwise ? -1 : 1) * (sweep * k)) / steps,
 					x = circle.x + Math.cos(angle) * circle.r,
 					y = circle.y + Math.sin(angle) * circle.r
 				route.push(new Vector3(x, y, b.z))
@@ -182,9 +196,8 @@ export class LaneFrame {
 
 	public Project(pos: Vector2 | Vector3, out: LanePoint = { s: 0, lat: 0 }): LanePoint {
 		let bestDist = Infinity
-		for (let i = 0; i < this.segments.length; i++) {
-			const seg = this.segments[i],
-				rx = pos.x - seg.ax,
+		for (const seg of this.segments) {
+			const rx = pos.x - seg.ax,
 				ry = pos.y - seg.ay,
 				t = Math.min(seg.length, Math.max(0, rx * seg.dx + ry * seg.dy)),
 				ox = rx - seg.dx * t,
@@ -215,7 +228,10 @@ export class LaneFrame {
 	/** The obstacle a creep at route distance `s` passes next, if it is within `before` of it. */
 	public NextObstacle(s: number, before: number): Nullable<LaneObstacle> {
 		for (const obstacle of this.Obstacles) {
-			if (s <= obstacle.S + obstacle.Radius && s >= obstacle.S - obstacle.Radius - before) {
+			if (
+				s <= obstacle.S + obstacle.Radius &&
+				s >= obstacle.S - obstacle.Radius - before
+			) {
 				return obstacle
 			}
 		}
@@ -224,16 +240,18 @@ export class LaneFrame {
 
 	/**
 	 * Rebuilds the route round the towers standing now and the obstacles along it; `cornerCut` is
-	 * how far from a corner creeps already turn for the next one.
+	 * how far from a corner creeps already turn for the next one, `clearance` how far off a tower's
+	 * hull they walk round it.
 	 */
-	public Refresh(towers: Tower[], cornerCut: number): void {
+	public Refresh(towers: Tower[], cornerCut: number, clearance: number): void {
 		const alive = towers.filter(tower => tower.IsAlive)
-		const key = alive.map(tower => tower.Index).join(",") + ":" + cornerCut
+		const key =
+			alive.map(tower => tower.Index).join(",") + ":" + cornerCut + ":" + clearance
 		if (key === this.towersKey) {
 			return
 		}
 		this.towersKey = key
-		this.build(NaturalRoute(CutCorners(this.Corners, cornerCut), alive, ROUTE_CLEARANCE))
+		this.build(NaturalRoute(CutCorners(this.Corners, cornerCut), alive, clearance))
 		this.Obstacles.length = 0
 		const point: LanePoint = { s: 0, lat: 0 }
 		for (const tower of alive) {
@@ -280,9 +298,9 @@ export class LaneFrame {
 
 	private segmentAt(s: number): Segment {
 		const segments = this.segments
-		for (let i = 0; i < segments.length; i++) {
-			if (s < segments[i].start + segments[i].length) {
-				return segments[i]
+		for (const segment of segments) {
+			if (s < segment.start + segment.length) {
+				return segment
 			}
 		}
 		return segments[segments.length - 1]

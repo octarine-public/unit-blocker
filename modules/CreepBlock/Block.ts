@@ -18,8 +18,15 @@ import {
 	StatusMouse
 } from "./Menu"
 import { MotionTracker } from "./Motion"
-import { BlockAction, BlockPlan, CreepRole, PlanBlock, ResetPlanner, Tuning } from "./Planner"
 import { BestPosition, DrawParticles, RemoveParticles } from "./ParticleHelp"
+import {
+	BlockAction,
+	BlockPlan,
+	CreepRole,
+	PlanBlock,
+	ResetPlanner,
+	Tuning
+} from "./Planner"
 import { DrawPlan } from "./Visual"
 
 const SEARCH_RANGE = 1200
@@ -52,10 +59,12 @@ stateMain.OnValue(SwitchParticles)
 
 CountUnits.OnValue(() => statuses.clear())
 
+// the default 16 gives lookAhead 0.13, gap -4.5, pressSpread 80: the tuning measured with no lost
+// creep on mid (30/30) and top (20/20), tools/block-test/EXPERIMENTS.md nz30, nz31
 Sensitivity.OnValue(caller => {
-	Tuning.lookAhead = 0.07 + caller.value * 0.005
-	Tuning.gap = caller.value * 0.375
-	Tuning.pressSpread = Math.min(200, Math.max(0, (16 - caller.value) * 20))
+	Tuning.lookAhead = 0.05 + caller.value * 0.005
+	Tuning.gap = caller.value * 0.375 - 10.5
+	Tuning.pressSpread = Math.min(200, Math.max(0, (20 - caller.value) * 20))
 })
 
 Key.OnPressed(() => {
@@ -64,7 +73,9 @@ Key.OnPressed(() => {
 	}
 	turnStateBlock = !turnStateBlock
 	if (CenterCamera.value && StateUnits.SelectedID === 0) {
-		GameState.ExecuteCommand((turnStateBlock ? "+" : "-") + "dota_camera_center_on_hero")
+		GameState.ExecuteCommand(
+			(turnStateBlock ? "+" : "-") + "dota_camera_center_on_hero"
+		)
 	}
 })
 
@@ -72,7 +83,9 @@ Key.OnValue(caller => {
 	if (!CenterCamera.value || StateUnits.SelectedID !== 0 || KeyStyle.SelectedID !== 0) {
 		return
 	}
-	GameState.ExecuteCommand((caller.isPressed ? "+" : "-") + "dota_camera_center_on_hero")
+	GameState.ExecuteCommand(
+		(caller.isPressed ? "+" : "-") + "dota_camera_center_on_hero"
+	)
 })
 
 KeyStyle.OnValue(() => (turnStateBlock = false))
@@ -219,7 +232,11 @@ function BlockWith(unit: Unit, pool: Creep[], now: number): boolean {
 	if (frame === undefined) {
 		return false
 	}
-	frame.Refresh(EntityManager.GetEntitiesByClass(Tower), Tuning.cornerCut)
+	frame.Refresh(
+		EntityManager.GetEntitiesByClass(Tower),
+		Tuning.cornerCut,
+		Tuning.routeClearance
+	)
 	const plan = PlanBlock(
 		unit,
 		creeps.filter(creep => creep.Lane === lane),
@@ -272,6 +289,10 @@ export function Update() {
 			break
 	}
 	units.splice(CountUnits.value)
+	if (Tuning.mpc > 0) {
+		// the forecast needs the blocking units' own motion too
+		motion.Update(units, now)
+	}
 	for (const unit of units) {
 		BlockWith(unit, pool, now)
 	}

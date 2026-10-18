@@ -86,7 +86,7 @@ function Reject(results) {
 
 ;(async () => {
 	const startCount = await evalInGame("__bt.results.length")
-	if (!noStart) await evalInGame(`JSON.stringify(__bt.run(${JSON.stringify(opts)}))`)
+	if (!noStart) await evalInGame(`JSON.stringify(__bt.run(${JSON.stringify({ ...opts, freeT1: FREE.t1Mean })}))`)
 	const t0 = Date.now()
 	let printed = startCount
 	for (;;) {

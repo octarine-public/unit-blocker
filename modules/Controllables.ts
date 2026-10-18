@@ -1,3 +1,4 @@
+import { MenuIcons } from "../base/MenuIcons"
 
 export const baseCheckUnit = (ent: Unit) =>
 	ent.IsAlive &&
@@ -40,7 +41,7 @@ export const StopUnit = (unit: Unit) => {
 }
 
 export function MenuControllables(root: Menu.Node) {
-	const ControllablesTree = root.AddNode("Additional settings")
+	const ControllablesTree = root.AddNode("Additional settings", MenuIcons.Additional)
 
 	const StateUnits = ControllablesTree.AddDropdown(
 		"Units",
@@ -53,12 +54,14 @@ export function MenuControllables(root: Menu.Node) {
 		0,
 		"More than two units(or heroes) for\none line of creeps is not recommended"
 	)
+	StateUnits.IconPath = MenuIcons.Units
 
 	const CenterCamera = ControllablesTree.AddToggle(
 		"Center Camera",
 		false,
 		"Centering camera on your hero"
 	)
+	CenterCamera.IconPath = MenuIcons.CenterCamera
 	const CountUnits = ControllablesTree.AddSlider(
 		"Number of unit",
 		3,
@@ -67,6 +70,7 @@ export function MenuControllables(root: Menu.Node) {
 		0,
 		"Number of units to use"
 	)
+	CountUnits.IconPath = MenuIcons.CountUnits
 
 	return {
 		ControllablesTree,

@@ -68,7 +68,9 @@ export const enum TraceClamp {
 	NoBackStep = 1,
 	TowerHug = 2,
 	PushedOut = 4,
-	ShadowGuard = 8
+	ShadowGuard = 8,
+	RaceAngle = 16,
+	KeyHold = 32
 }
 
 export interface BlockPlan {
@@ -175,7 +177,24 @@ export const Tuning = {
 	advanceTimeout: 8,
 	advanceTiming: 0,
 	turnBackReach: 0,
+	// share of the race angle acos(unit speed / creep speed) the way to the target keeps at least
+	// while the key creep is off the unit's line and not past it (0: off)
+	raceAngle: 0,
+	/** How far behind the unit along the lane the key creep may still be for the race angle */
+	raceDepth: 250,
+	/** Seconds the front creep is kept in a tower passage before another may take over (0: off) */
+	passageKeyHold: 0,
 	extraLatency: 0.03,
+	/** Ticks between two moves: 4 is the game's own right-button repeat (`MoveUnit`) */
+	moveIntervalTicks: 4,
+	/** Stop a walk the click rate keeps from turning to the new target (`GuardWithStop`; 0: off) */
+	stopGuard: 1,
+	/** Share of its speed the unit has to be closing on the new target with, or the guard stops it */
+	stopProgress: 0.5,
+	/** Share of the ticks a move waits beyond one (the click rate) added to the creeps' lead (0: off) */
+	moveLead: 0,
+	/** A move shifting the target less than this waits two click intervals (`NeedsOrder`; 0: off) */
+	moveReserve: 60,
 	orderMinShift: 30,
 	orderShiftShare: 0.35,
 	orderRefresh: 1
@@ -195,6 +214,8 @@ interface Lead {
 
 const detourSince = new Map<Creep, number>()
 const fronts = new Map<Unit, Creep>()
+/** Since when the unit's front creep has been the one it is */
+const frontSince = new Map<Unit, number>()
 const sides = new Map<Unit, number>()
 const splitWalks = new Set<Unit>()
 const advances = new Map<Unit, Advance>()
@@ -1042,6 +1063,7 @@ function ForecastShift(
 export function ResetPlanner(): void {
 	detourSince.clear()
 	fronts.clear()
+	frontSince.clear()
 	sides.clear()
 	splitWalks.clear()
 	walkFirsts.clear()
@@ -1055,15 +1077,17 @@ export function PlanBlock(
 	frame: LaneFrame,
 	motion: MotionTracker,
 	skipRanged: boolean,
-	now: number
+	now: number,
+	/** Where the unit's last order went: the humanizer's cursor glides on from there */
+	aim?: Vector3
 ): BlockPlan {
+	// when an order given now lands, as aio's orbwalk counts it: the humanizer's hold for the glide
+	// to the spot plus `InputLag`, the game's median answer (the round trip rounded up to ticks and
+	// a server tick: one tick on a listen server, three at 60 ms)
 	const unitLane = frame.Project(unit.Position),
 		unitPad = unit.PaddedCollisionRadius,
 		latency =
-			GameState.InputLag +
-			GameState.TickInterval +
-			ExecuteOrder.EstimateDispatchDelay() +
-			Tuning.extraLatency
+			ExecuteOrder.EstimateDispatchDelay(aim ?? unit.Position) + GameState.InputLag
 
 	const views: CreepView[] = []
 	for (const creep of creeps) {
@@ -1193,7 +1217,16 @@ export function PlanBlock(
 		return plan
 	}
 
-	const lookAhead = latency + Tuning.lookAhead
+	// a tick and `extraLatency` on top of the order's arrival: the lead every bench series was
+	// measured with (97 ms in all on a listen server), so the tuning keeps its meaning
+	// `moveLead`: a move stands until the click rate lets the next one go (up to 4 ticks, the bench
+	// tuning was measured with one), so the spot leads the creeps by a share of the wait too
+	const lookAhead =
+		latency +
+		GameState.TickInterval +
+		Tuning.extraLatency +
+		Tuning.lookAhead +
+		Tuning.moveLead * Math.max(0, Tuning.moveIntervalTicks - 1) * GameState.TickInterval
 	const leads: Lead[] = blockable.map(view => {
 		const vel = view.Velocity,
 			dir = frame.Direction(view.Lane.s)
@@ -1246,6 +1279,24 @@ export function PlanBlock(
 		if (frozen !== undefined) {
 			front = frozen
 		}
+	}
+	// `passageKeyHold`: in a tower passage a creep frozen in front of the unit stops being the front
+	// (its predicted position stands while the others' run on) and comes back once it walks again,
+	// a new target across the passage each time; the front from before is kept that long instead
+	const since = frontSince.get(unit)
+	if (
+		Tuning.passageKeyHold > 0 &&
+		kept !== undefined &&
+		front !== kept &&
+		since !== undefined &&
+		now - since < Tuning.passageKeyHold &&
+		PassageObstacle(frame, kept.s, unitLane.s, unitPad) !== undefined
+	) {
+		front = kept
+		trace.Clamp |= TraceClamp.KeyHold
+	}
+	if (front !== kept || since === undefined) {
+		frontSince.set(unit, now)
 	}
 	fronts.set(unit, front.view.Creep)
 	const group = leads
@@ -1454,6 +1505,28 @@ export function PlanBlock(
 		)
 		targetS += ds
 		targetLat += dl
+	}
+	// `raceAngle`: a key creep off the unit's line, faster than the unit and not past it is a lateral
+	// race. Every unit across costs the unit (creep speed − unit speed × cos θ) / (unit speed × sin θ)
+	// of its lead, least at cos θ = unit speed / creep speed (30° for 280 against 325); the lead along
+	// the lane makes the way flatter than that (11–17° in the recorded losses) and the creep comes
+	// level first, so the target comes no further along than that angle allows
+	const raceSpeed = key.view.Creep.MoveSpeed,
+		raceAhead = key.view.Lane.s - unitLane.s
+	if (
+		Tuning.raceAngle > 0 &&
+		!walking &&
+		unitSpeed < raceSpeed &&
+		Math.abs(key.view.Lane.lat - unitLane.lat) > key.view.Contact &&
+		raceAhead < key.view.Contact &&
+		raceAhead > -Tuning.raceDepth
+	) {
+		const angle = Math.acos(unitSpeed / raceSpeed) * Tuning.raceAngle,
+			maxS = unitLane.s + Math.abs(targetLat - unitLane.lat) / Math.tan(angle)
+		if (targetS > maxS) {
+			targetS = maxS
+			trace.Clamp |= TraceClamp.RaceAngle
+		}
 	}
 	const shift = Math.abs(targetLat - unitLane.lat),
 		minS =

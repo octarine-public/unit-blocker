@@ -1,6 +1,6 @@
 import { stateMain } from "../../base/MenuBase"
 import { canvas } from "../../render"
-import { baseCheckUnit, Controllables, MoveUnit } from "../Controllables"
+import { baseCheckUnit, Controllables, MoveUnit, StopUnit } from "../Controllables"
 import { GetLaneFrame, ResetLaneFrames } from "./Lane"
 import {
 	CenterCamera,
@@ -39,6 +39,8 @@ const statuses = new Map<Unit, string>()
 const waveStart = new Map<Creep, number>()
 const delays = new Map<Unit, number>()
 const lastOrders = new Map<Unit, LastOrder>()
+/** When the stop guard last stopped the unit */
+const stops = new Map<Unit, number>()
 
 interface LastOrder {
 	readonly action: BlockAction
@@ -95,6 +97,7 @@ function ResetState() {
 	plans.clear()
 	delays.clear()
 	lastOrders.clear()
+	stops.clear()
 	ResetPlanner()
 }
 
@@ -173,6 +176,16 @@ function NeedsOrder(plan: BlockPlan, now: number): boolean {
 	}
 	const shift = target.Distance2D(last.target),
 		remaining = unit.Position.Distance2D(target)
+	// `moveReserve`: a move shuts the click rate's window for 4 ticks; a correction shorter than
+	// this waits twice that, so the window is open when the target jumps across the lane
+	if (
+		Tuning.moveReserve > 0 &&
+		unit.IsMoving &&
+		shift < Tuning.moveReserve &&
+		now - last.time < 2 * Tuning.moveIntervalTicks * GameState.TickInterval
+	) {
+		return false
+	}
 	return (
 		shift > Math.max(Tuning.orderMinShift, remaining * Tuning.orderShiftShare) ||
 		(!unit.IsMoving && remaining > Tuning.orderMinShift) ||
@@ -186,11 +199,57 @@ function Execute(plan: BlockPlan, now: number): void {
 		return
 	}
 	if (plan.Action === BlockAction.Hold) {
-		unit.OrderStop()
-	} else if (plan.Target !== undefined) {
-		MoveUnit(unit, plan.Target, sleeper)
+		// a stop is no click: it goes out at once, whenever the last move went
+		StopUnit(unit)
+	} else if (
+		plan.Target === undefined ||
+		!MoveUnit(unit, plan.Target, sleeper, Tuning.moveIntervalTicks)
+	) {
+		// a move held back by the click rate is not the last order: it goes on the next tick it can
+		if (plan.Target !== undefined) {
+			GuardWithStop(plan, plan.Target, now)
+		}
+		return
 	}
 	lastOrders.set(unit, { action: plan.Action, target: plan.Target?.Clone(), time: now })
+}
+
+/**
+ * `stopGuard`: while the click rate holds a new move back (up to 4 ticks) the unit walks on to its
+ * old point. A stop is no click and goes out at once: it ends that walk when it no longer brings
+ * the unit to the new target (heading off by more than acos(`stopProgress`)), or when the new
+ * target is nearer than the old one and the unit reaches it before a stop given later would land
+ * (it would overshoot). The move follows as soon as the rate allows.
+ */
+function GuardWithStop(plan: BlockPlan, target: Vector3, now: number): void {
+	const unit = plan.Unit
+	if (Tuning.stopGuard <= 0 || !unit.IsMoving) {
+		return
+	}
+	// the stop lands after the order latency: one more within it changes nothing
+	const stoppedAt = stops.get(unit)
+	if (stoppedAt !== undefined && now - stoppedAt < plan.Latency + GameState.TickInterval) {
+		return
+	}
+	const vel = motion.Velocity(unit),
+		speed = Math.hypot(vel.x, vel.y),
+		pos = unit.Position,
+		dx = target.x - pos.x,
+		dy = target.y - pos.y,
+		dist = Math.hypot(dx, dy)
+	if (speed < Tuning.movingSpeed || dist <= Tuning.holdTolerance) {
+		return
+	}
+	const progress = (vel.x * dx + vel.y * dy) / dist,
+		old = lastOrders.get(unit)?.target,
+		overshoots =
+			old !== undefined &&
+			pos.Distance2D(old) > dist + Tuning.holdTolerance &&
+			dist <= speed * plan.Latency
+	if (progress < Tuning.stopProgress * speed || overshoots) {
+		StopUnit(unit)
+		stops.set(unit, now)
+	}
 }
 
 function GoingToBestPosition(unit: Unit): boolean {
@@ -243,7 +302,8 @@ function BlockWith(unit: Unit, pool: Creep[], now: number): boolean {
 		frame,
 		motion,
 		SkipRange.value,
-		now
+		now,
+		lastOrders.get(unit)?.target
 	)
 	plans.set(unit, plan)
 	statuses.set(unit, plan.Note)
@@ -289,10 +349,8 @@ export function Update() {
 			break
 	}
 	units.splice(CountUnits.value)
-	if (Tuning.mpc > 0) {
-		// the forecast needs the blocking units' own motion too
-		motion.Update(units, now)
-	}
+	// the forecast and the stop guard need the blocking units' own motion too
+	motion.Update(units, now)
 	for (const unit of units) {
 		BlockWith(unit, pool, now)
 	}

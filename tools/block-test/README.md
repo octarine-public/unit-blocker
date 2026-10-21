@@ -19,6 +19,11 @@ server (or `console.bat`) has to be running.
 | `contact.cjs` | Statistics of hero–creep contact episodes |
 | `stops.cjs` | Creeps' stops against the server's collision rules (`dota2-ida/notes/creep/REPORT.md`): closest hero–creep distance, every stop's length in ticks with the unit in the way and the rule (hard contact / look-ahead), the side creeps walk off to; `--key` only while the key is held, `--still` for a hero standing still (no key), `--list` every stop |
 | `compare.cjs` | Technique profile of clean runs: hero forward speed, standing time, orders, gap to the front creep |
+| `rec.js` | Passive recorder for real games (a server with ping, no trainer): every tick while the blocker has a plan for the local hero, the network (latency, `InputLag`, dispatch estimate, humanizer queue) and each order's way out (queued → sent → the hero reacting); `node inject.cjs rec.js`, `__rec.status()` |
+| `rec-dump.cjs` | Saves the recorder's finished sessions to `out/rec/` (`--flush` closes the one in progress). The recorder stores each finished session in the script store (`ubrec`) at once, since the runtime reloads the scripts on its own (a new match, a file changed in the script folder) and that wipes everything injected |
+| `rec-watch.cjs` | Keeps the recorder in the game: injects it again within 2 s of a script reload; run it in the background while playing |
+| `clicks.js` | Logs the player's own orders, to measure the game's right-button repeat (`__clicks.report()`): 133 ms, 4 ticks, the cap `MoveUnit` keeps |
+| `rec-report.cjs` | Report on `out/rec/`: latency the planner assumes against the measured order → reaction time, order rate, plan flips, the last seconds before every escape (`--before n`) |
 
 ## What a run records
 
